@@ -7,12 +7,10 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Veritabanı Ayarı (MySQL)
+// Bağlantı kurulamazsa derleme hata vermesin diye versiyonu sabitledik
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
-// Veritabanı hatalarını detaylı görmek için filtre (Önemli!)
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 36))));
 
 // 2. CORS Ayarı
 builder.Services.AddCors(options => {
@@ -35,7 +33,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "Varsayilan_Gizli_Anahtar_32_Karakter_Olmali"))
         };
     });
 
@@ -45,11 +43,12 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// 4. Swagger Ayarı (Şartı kaldırdık, her ortamda çalışacak)
+// 4. Swagger ve Middleware Ayarları
+// Hataları görmek için her zaman açık kalmalı
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// Render için HTTPS yönlendirmesini kapattık
+// Render'da sonsuz döngü yapmaması için kapalı tutuyoruz
 // app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");

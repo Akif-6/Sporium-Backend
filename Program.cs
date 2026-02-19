@@ -51,7 +51,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// İŞTE BURAYI İPTAL ETTİK! (Render HTTPS yönlendirmesini kendi yapıyor)
+// app.UseHttpsRedirection();
 
 // Önemli: UseCors, UseAuthentication'dan önce gelmelidir.
 app.UseCors("AllowAll");
